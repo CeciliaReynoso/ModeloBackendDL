@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
+import RolesContext from '../contexts/RolesContext';
 
 const PrivateRoute = ({ children }) => {
-  const token = window.sessionStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  const { user } = useContext(RolesContext);
+  return user ? children : <Navigate to="/login" />;
 };
 
 export default PrivateRoute;

@@ -1,73 +1,51 @@
-import axios from 'axios'
-import { useState, useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ENDPOINT } from '../config/constans'
-import RolesContext from '../contexts/RolesContext'
-// import Context from '../contexts/Context'
-
-const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
-const initialForm = { email: ' ', password: '******' }
+import React, { useState, useContext } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import RolesContext from '../contexts/RolesContext';
 
 const Login = () => {
-  const navigate = useNavigate()
-  const [user, setUser] = useState(initialForm)
-  const { setRoles } = useContext(RolesContext)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { setRoles } = useContext(RolesContext);
+  const navigate = useNavigate();
 
-  const handleUser = (event) => setUser({ ...user, [event.target.name]: event.target.value })
-
-  const handleForm = (event) => {
-    event.preventDefault()
-
-    if (!user.email.trim() || !user.password.trim()) {
-      return window.alert('Email y password obligatorias.')
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/login', { email, password });
+      setRoles(response.data.token);
+      navigate('/perfil'); // Redirige al perfil después de un login exitoso
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+      alert('Credenciales incorrectas');
     }
-
-    if (!emailRegex.test(user.email)) {
-      return window.alert('El formato del email no es correcto!')
-    }
-
-    axios.post(ENDPOINT.login, user)
-      .then(({ data }) => {
-        window.sessionStorage.setItem('token', data.token)
-        window.alert('Usuario identificado con éxito 😀.')
-        setRoles({})
-        navigate('/perfil')
-      })
-      .catch(({ response: { data } }) => {
-        console.error(data)
-        window.alert(`${data.message} 🙁.`)
-      })
-  }
+  };
 
   return (
-    <form onSubmit={handleForm} className='col-10 col-sm-6 col-md-3 m-auto mt-5'>
-      <h1>Iniciar Sesión</h1>
-      <hr />
-      <div className='form-group mt-1 '>
-        <label>Email address</label>
+    <form onSubmit={handleSubmit}>
+      <div className='form-group mt-1'>
+        <label>Email</label>
         <input
-          value={user.email}
-          onChange={handleUser}
           type='email'
-          name='email'
           className='form-control'
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder='Enter email'
         />
       </div>
-      <div className='form-group mt-1 '>
+      <div className='form-group mt-1'>
         <label>Password</label>
         <input
-          value={user.password}
-          onChange={handleUser}
           type='password'
-          name='password'
           className='form-control'
-          placeholder='Password'
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder='Enter password'
         />
       </div>
-      <button type='submit' className='btn btn-light mt-3'>Iniciar Sesión</button>
+      <button type='submit' className='btn btn-primary mt-2'>Login</button>
     </form>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

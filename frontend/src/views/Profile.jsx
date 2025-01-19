@@ -1,37 +1,42 @@
-import axios from 'axios'
-import { useContext, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ENDPOINT } from '../config/constans'
-import RolesContext from '../contexts/RolesContext'
+import React, { useContext, useEffect, useState } from 'react';
+import axios from 'axios';
+import RolesContext from '../contexts/RolesContext';
 
 const Profile = () => {
-  const navigate = useNavigate()
-  const { getRoles, setRoles } = useContext(RolesContext)
+  const { user } = useContext(RolesContext);
+  const [profile, setProfile] = useState(null);
 
-  const getRolesData = () => {
-    const token = window.sessionStorage.getItem('token')
-    axios.get(ENDPOINT.users, { headers: { Authorization: `Bearer ${token}` } })
-      .then(({ data: [user] }) => setRoles({ ...user }))
-      .catch(({ response: { data } }) => {
-        console.error(data)
-        window.sessionStorage.removeItem('token')
-        setRoles(null)
-        navigate('/')
+  useEffect(() => {
+    if (user) {
+      const token = window.sessionStorage.getItem('token');
+      axios.get(`/usuarios/${user.email}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       })
+        .then((response) => {
+          setProfile(response.data);
+        })
+        .catch((error) => {
+          console.error('Error al obtener el perfil del usuario:', error);
+        });
+    }
+  }, [user]);
+
+  if (!profile) {
+    return <div>Cargando...</div>;
   }
 
-  useEffect(getRolesData, [])
-
   return (
-    <div className='py-5'>
-      <h1>
-        Bienvenido <span className='fw-bold'>{getRoles?.email}</span>
-      </h1>
-      <h3>
-        {getRoles?.rol} en {getRoles?.lenguage}
-      </h3>
+    <div>
+      <h1>Perfil de Usuario</h1>
+      <p>Email: {profile.email}</p>
+      <p>Nombre: {profile.nombre}</p>
+      <p>Dirección: {profile.direccion}</p>
+      <p>Lenguage: {profile.lenguage}</p>
+      <p>Rol: {profile.rol}</p>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;
